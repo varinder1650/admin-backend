@@ -2,8 +2,6 @@ import time
 import random
 import string
 from datetime import datetime
-from typing import Optional
-import hashlib
 from admin.cache.redis_manager import get_redis
 import logging
 

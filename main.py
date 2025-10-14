@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.app import create_customer_app
+# from app.app import create_customer_app
 from admin.app import create_admin_app
 from contextlib import asynccontextmanager
 import logging
@@ -61,10 +61,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-customer_app = create_customer_app()
+# customer_app = create_customer_app()
 ws_app = create_admin_app()
 
-app.state.customer_app = customer_app
+# app.state.customer_app = customer_app
 app.state.ws_app = ws_app
 
 # app.mount("/api",customer_app)
