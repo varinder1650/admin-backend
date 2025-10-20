@@ -11,6 +11,7 @@ from admin.handlers.customers import send_customers
 from admin.handlers.help import get_tickets,get_ticket_detail,get_ticket_stats,update_ticket_status,respond_to_ticket
 from admin.handlers.requests import get_requests,update_requests_status
 from admin.handlers.coupons import get_coupons,create_coupons,update_coupon,delete_coupon,toggle_coupon
+from admin.handlers.shop_status import get_shop_status,update_shop_status
 from admin.handlers.auth import (
     handle_get_users, 
     handle_update_user_role, 
@@ -22,7 +23,13 @@ from admin.handlers.settings import (
     get_pricing_config, 
     update_pricing_config
 )
-
+from admin.handlers.notifications import (
+    get_all_notifications,
+    send_notification_to_user,
+    send_notification_to_all_users,
+    delete_notification,
+    get_notification_stats
+)
 logger = logging.getLogger(__name__)
 
 async def admin_websocket_handler(websocket: WebSocket):
@@ -287,11 +294,32 @@ async def handle_admin_messages(websocket: WebSocket, user_info: dict):
             elif msg_type == "toggle_coupon_status":
                 await toggle_coupon(websocket,message.get("data"),db)
 
+            elif msg_type == "get_shop_status":
+                await get_shop_status(websocket, db)
+            
+            elif msg_type == "update_shop_status":
+                await update_shop_status(websocket, message.get("data"), user_info, db)
+
             #Logout
             elif msg_type == "logout":
                 logger.info(f"User {user_info.get('email')} logging out")
                 break
-
+            
+            elif msg_type == "get_notifications":
+                await get_all_notifications(websocket, message.get("filters", {}), db)
+            
+            elif msg_type == "send_notification_to_user":
+                await send_notification_to_user(websocket, message.get("data"), user_info, db)
+            
+            elif msg_type == "send_notification_to_all":
+                await send_notification_to_all_users(websocket, message.get("data"), user_info, db)
+            
+            elif msg_type == "delete_notification":
+                await delete_notification(websocket, message.get("data"), user_info, db)
+            
+            elif msg_type == "get_notification_stats":
+                await get_notification_stats(websocket, db)
+                
             else:
                 logger.warning(f"Unknown message type: {msg_type}")
                 await websocket.send_json({
