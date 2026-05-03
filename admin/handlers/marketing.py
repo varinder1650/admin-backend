@@ -6,6 +6,9 @@ from bson import ObjectId
 from admin.utils.serialize import serialize_document
 from admin.config.cloudinary_config import CloudinaryManager
 from admin.connection_manager import manager
+from admin.cache.redis_manager import get_redis
+
+MARKETING_CACHE_KEY = "marketing:active_banners"
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +72,7 @@ async def handle_create_marketing_banner(websocket: WebSocket, data: dict, user_
 
         inserted_id = await db.insert_one("marketing_banners", doc)
         doc["_id"] = inserted_id
+        await get_redis().delete(MARKETING_CACHE_KEY)
         await websocket.send_json({
             "type": "marketing_banner_created",
             "banner": serialize_document(doc),
@@ -130,6 +134,7 @@ async def handle_update_marketing_banner(websocket: WebSocket, data: dict, user_
 
         await db.update_one("marketing_banners", {"_id": ObjectId(banner_id)}, {"$set": update})
         updated = await db.find_one("marketing_banners", {"_id": ObjectId(banner_id)})
+        await get_redis().delete(MARKETING_CACHE_KEY)
 
         await websocket.send_json({
             "type": "marketing_banner_updated",
@@ -157,6 +162,7 @@ async def handle_delete_marketing_banner(websocket: WebSocket, data: dict, db):
             return
 
         await db.delete_one("marketing_banners", {"_id": ObjectId(banner_id)})
+        await get_redis().delete(MARKETING_CACHE_KEY)
 
         await websocket.send_json({"type": "marketing_banner_deleted", "id": banner_id})
         await manager.broadcast(
